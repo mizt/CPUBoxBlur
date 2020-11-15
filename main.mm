@@ -28,7 +28,7 @@ void toYX(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 	for(int i=begin; i<end; i++) {
 		for(int j=0; j<w; j++) {
 			dst[j*h+i] = src[i*w+j];
-		}	
+		}
 	}
 }
 
@@ -36,24 +36,24 @@ void toXY(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 	for(int j=begin; j<end; j++) {
 		for(int i=0; i<h; i++) {
 			dst[i*w+j] = src[j*h+i];
-		}	
+		}
 	}
 }
 
-void blurX(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h,int begin,int end) {
+void blurX(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 	
 	int radius = RADIUS;
 	if(radius<=1) radius = 1; 
 	
 	double weight = 1.0/(double)(radius*2+1);
 	
-	unsigned int *buff = buffer;
-
 	for(int i=begin; i<end; i++) {
 		
 		int sr = 0;
 		int sg = 0;
 		int sb = 0;
+		
+		unsigned int *p = src+i*w;
 		
 		for(int k=-(radius+1); k<radius; k++) {
 			
@@ -61,53 +61,55 @@ void blurX(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h,
 			if(j2<0) j2=0;
 			else if(j2>=w-1) j2=w-1;
 			
-			int addr = i*w+j2;
-			unsigned int pixel = src[addr];
+			unsigned int pixel = *(p+j2);
 			
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 		}
-				
+		
+		unsigned int *q = dst+i;
+		
 		for(int j=0; j<w; j++) {
 // sub
 			int j2 = j-(radius+1);
 			if(j2<0) j2=0;
-			unsigned int pixel = src[i*w+j2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;			
-// add		
+			unsigned int pixel = *(p+j2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
 			j2 = j+radius;
 			if(j2>=w-1) j2=w-1;
-			pixel = src[i*w+j2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			pixel = *(p+j2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 
 			unsigned char r = sr*weight;
 			unsigned char g = sg*weight;
 			unsigned char b = sb*weight;
 								
-			dst[j*h+i] = 0xFF000000|b<<16|g<<8|r;
-		}	
-	}	
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
+		}
+	}
 }
 
-void blurY(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h,int begin,int end) {
+void blurY(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 	
 	int radius = RADIUS;
 	if(radius<=1) radius = 1; 
 		
 	double weight = 1.0/(double)(radius*2+1);
-	
-	unsigned int *buff = buffer;
-	
+		
 	for(int j=begin; j<end; j++) {
 		
 		int sr = 0;
 		int sg = 0;
 		int sb = 0;
+		
+		unsigned int *p = src+j*h;
 		
 		for(int k=-(radius+1); k<radius; k++) {
 		
@@ -115,34 +117,37 @@ void blurY(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h,
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
 			
-			unsigned int pixel = src[j*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			unsigned int pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 		}
 		
+		unsigned int *q = dst+j;
+		
 		for(int i=0; i<h; i++) {
-// sub	
+// sub
 			int i2 = i-(radius+1);
-			if(i2<0) i2 = 0;			
-			unsigned int pixel = src[j*h+i2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;
-// add				
+			if(i2<0) i2 = 0;
+			unsigned int pixel = *(p+i2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
 			i2 = i+radius;
 			if(i2>=h) i2 = h-1; 
-			pixel = src[j*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 						
 			unsigned char r = sr*weight;
 			unsigned char g = sg*weight;
-			unsigned char b = sb*weight;		
+			unsigned char b = sb*weight;
 			
-			dst[i*w+j] = 0xFF000000|b<<16|g<<8|r;
-		}	
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
+		}
 	}
 }
 
@@ -153,13 +158,17 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 	
 	double weight = 1.0/(double)(radius*2+1);
 	
-	unsigned int *buff = buffer;
+	unsigned int sr = 0;
+	unsigned int sg = 0;
+	unsigned int sb = 0;
+	
+	unsigned int *buf = buffer;
 
 	for(int i=begin; i<end; i++) {
 		
-		int sr = 0;
-		int sg = 0;
-		int sb = 0;
+		sr = sg = sb = 0;
+		
+		unsigned int *p = src+i*w;
 		
 		for(int k=-(radius+1); k<radius; k++) {
 			
@@ -167,45 +176,42 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 			if(j2<0) j2=0;
 			else if(j2>=w-1) j2=w-1;
 			
-			int addr = i*w+j2;
-			unsigned int pixel = src[addr];
+			unsigned int pixel = *(p+j2);
 			
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 		}
 				
 		for(int j=0; j<w; j++) {
 // sub
 			int j2 = j-(radius+1);
 			if(j2<0) j2=0;
-			unsigned int pixel = src[i*w+j2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;			
-// add		
+			unsigned int pixel = *(p+j2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
 			j2 = j+radius;
 			if(j2>=w-1) j2=w-1;
-			pixel = src[i*w+j2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			pixel = *(p+j2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 
 			unsigned char r = sr*weight;
 			unsigned char g = sg*weight;
 			unsigned char b = sb*weight;
 								
-			*buff++ = 0xFF000000|b<<16|g<<8|r;
-		}	
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
+		}
 	}
 	
 	for(int i=begin; i<end; i++) {
 		
-		int i2 = i-begin;
+		unsigned int *p = buffer+(i-begin)*w;
 			
-		int sr = 0;
-		int sg = 0;
-		int sb = 0;
+		sr = sg = sb = 0;
 		
 		for(int k=-(radius+1); k<radius; k++) {
 			
@@ -213,36 +219,39 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 			if(j2<0) j2=0;
 			else if(j2>=w-1) j2=w-1;
 			
-			unsigned int pixel = buffer[i2*w+j2];
+			unsigned int pixel = *(p+j2);
 			
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 		}
-				
+		
+		unsigned int *q = dst+i;
+		
 		for(int j=0; j<w; j++) {
 // sub
 			int j2 = j-(radius+1);
 			if(j2<0) j2=0;
-			unsigned int pixel = buffer[i2*w+j2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;	
-// add		
+			unsigned int pixel = *(p+j2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
 			j2 = j+radius;
-			if(j2>=w-1) j2=w-1;			
-			pixel = buffer[i2*w+j2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			if(j2>=w-1) j2=w-1;
+			pixel = *(p+j2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 
 			unsigned char r = sr*weight;
 			unsigned char g = sg*weight;
 			unsigned char b = sb*weight;
 								
-			dst[j*h+i] = 0xFF000000|b<<16|g<<8|r;
-		}	
-	}		
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
+		}
+	}
 }
 
 void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h,int begin,int end) {
@@ -251,14 +260,18 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 	if(radius<=1) radius = 1; 
 		
 	double weight = 1.0/(double)(radius*2+1);
+		
+	unsigned int sr = 0;
+	unsigned int sg = 0;
+	unsigned int sb = 0;
 	
-	unsigned int *buff = buffer;
-	
+	unsigned int *buf = buffer;
+
 	for(int j=begin; j<end; j++) {
 		
-		int sr = 0;
-		int sg = 0;
-		int sb = 0;
+		sr = sg = sb = 0;
+		
+		unsigned int *p = src+j*h;
 		
 		for(int k=-(radius+1); k<radius; k++) {
 		
@@ -266,77 +279,79 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
 			
-			unsigned int pixel = src[j*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
-		}
-		
-		for(int i=0; i<h; i++) {
-// sub	
-			int i2 = i-(radius+1);
-			if(i2<0) i2 = 0;			
-			unsigned int pixel = src[j*h+i2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;
-// add				
-			i2 = i+radius;
-			if(i2>=h) i2 = h-1; 
-			pixel = src[j*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
-						
-			unsigned char r = sr*weight;
-			unsigned char g = sg*weight;
-			unsigned char b = sb*weight;		
-			
-			*buff++ = 0xFF000000|b<<16|g<<8|r;
-		}	
-	}
-	
-	for(int j=begin; j<end; j++) {
-		
-		int j2 = j-begin;
-			
-		int sr = 0;
-		int sg = 0;
-		int sb = 0;
-		
-		for(int k=-(radius+1); k<radius; k++) {
-		
-			int i2 = 0+k;
-			if(i2<0) i2 = 0;
-			else if(i2>=h-1) i2=h-1;
-			
-			unsigned int pixel = buffer[j2*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			unsigned int pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 		}
 		
 		for(int i=0; i<h; i++) {
 // sub
 			int i2 = i-(radius+1);
-			if(i2<0) i2 = 0;			
-			unsigned int pixel = buffer[j2*h+i2];
-			sb -= (pixel>>16)&0xFF;
-			sg -= (pixel>>8)&0xFF;
-			sr -= (pixel)&0xFF;
-// add				
+			if(i2<0) i2 = 0;
+			unsigned int pixel = *(p+i2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
 			i2 = i+radius;
-			if(i2>=h) i2 = h-1; 	
-			pixel = buffer[j2*h+i2];
-			sb += (pixel>>16)&0xFF;
-			sg += (pixel>>8)&0xFF;
-			sr += (pixel)&0xFF;
+			if(i2>=h) i2 = h-1; 
+			pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
+						
+			unsigned char r = sr*weight;
+			unsigned char g = sg*weight;
+			unsigned char b = sb*weight;
+			
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
+		}
+	}
+	
+	for(int j=begin; j<end; j++) {
+			
+		sr = sg = sb = 0;
+		
+		unsigned int *p = buffer+(j-begin)*h;
+		
+		for(int k=-(radius+1); k<radius; k++) {
+		
+			int i2 = 0+k;
+			if(i2<0) i2 = 0;
+			else if(i2>=h-1) i2=h-1;
+			
+			unsigned int pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
+		}
+		
+		unsigned int *q = dst+j;
+		
+		for(int i=0; i<h; i++) {
+// sub
+			int i2 = i-(radius+1);
+			if(i2<0) i2 = 0;
+			unsigned int pixel = *(p+i2);
+			sb-=(pixel>>16)&0xFF;
+			sg-=(pixel>>8)&0xFF;
+			sr-=(pixel)&0xFF;
+// add
+			i2 = i+radius;
+			if(i2>=h) i2 = h-1;
+			pixel = *(p+i2);
+			sb+=(pixel>>16)&0xFF;
+			sg+=(pixel>>8)&0xFF;
+			sr+=(pixel)&0xFF;
 
 			unsigned char r = sr*weight;
 			unsigned char g = sg*weight;
-			unsigned char b = sb*weight;		
-			dst[i*w+j] = 0xFF000000|b<<16|g<<8|r;
-		}	
+			unsigned char b = sb*weight;
+			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
+		}
 	}
 }
 
@@ -353,22 +368,26 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		unsigned int sg = 0;
 		unsigned int sb = 0;
 		
+		unsigned int *p = src+i*w;
+		
 		for(int j=0; j<w; j++) {
 			
-			unsigned int pixel = src[i*w+j];
+			unsigned int pixel = *p++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
+		
+		unsigned int *q = dst+i;
 		
 		for(int j=0; j<w; j++) {
 		
@@ -378,16 +397,17 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 			int right = j+rudius;
 			if(right>=w) right = w-1;
 
-			double weight =  1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
 			
-			dst[j*h+i] = 0xFF000000|b<<16|g<<8|r;
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
 		}
 	}
 }
@@ -405,22 +425,26 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		unsigned int sg = 0;
 		unsigned int sb = 0;
 		
+		unsigned int *p = src+j*h;
+		
 		for(int i=0; i<h; i++) {
 			
-			unsigned int pixel = src[j*h+i];
+			unsigned int pixel = *p++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
+		
+		unsigned int *q = dst+j;
 		
 		for(int i=0; i<h; i++) {
 			
@@ -432,15 +456,16 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 
 			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
 			 			
-			dst[i*w+j] = 0xFF000000|b<<16|g<<8|r;
-		}		
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
+		}
 	}
 }
 
@@ -449,31 +474,33 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 	int rudius = RADIUS;
 	if(rudius<=1) rudius = 1;
 
+	unsigned int *buf = buffer;
+	
 	for(int i=begin; i<end; i++) {
 		
-		int i2 = i-begin;
-
 		unsigned int *sum = rgb;
 		
 		unsigned int sr = 0;
 		unsigned int sg = 0;
 		unsigned int sb = 0;
 		
+		unsigned int *p = src+i*w;
+		
 		for(int j=0; j<w; j++) {
 			
-			unsigned int pixel = src[i*w+j];
+			unsigned int pixel = *p++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
 		
 		for(int j=0; j<w; j++) {
@@ -484,18 +511,20 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			int right = j+rudius;
 			if(right>=w) right = w-1;
 
-			double weight =  1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
 			
-			buffer[i2*w+j] = 0xFF000000|b<<16|g<<8|r;
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
 		}
 	}
+	
+	buf = buffer;
 	
 	for(int i=begin; i<end; i++) {
 
@@ -509,21 +538,23 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			
 			int i2 = i-begin;
 			
-			unsigned int pixel = buffer[i2*w+j];
+			unsigned int pixel = *buf++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
 		
+		unsigned int *q = dst+i;
+
 		for(int j=0; j<w; j++) {
 		
 			int left = j-rudius;
@@ -532,18 +563,19 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			int right = j+rudius;
 			if(right>=w) right = w-1;
 
-			double weight =  1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
-			 			
-			dst[j*h+i] = 0xFF000000|b<<16|g<<8|r;
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
 		}
-	}	
+	}
 }
 
 void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int *rgb,int w,int h,int begin, int end) {
@@ -551,31 +583,33 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 	int rudius = RADIUS;
 	if(rudius<=1) rudius = 1;
 	
+	unsigned int *buf = buffer;
+	
 	for(int j=begin; j<end; j++) {
-		
-		int j2 = j-begin;
-		
+				
 		unsigned int *sum = rgb;
 		
 		unsigned int sr = 0;
 		unsigned int sg = 0;
 		unsigned int sb = 0;
 		
+		unsigned int *p = src+j*h;
+		
 		for(int i=0; i<h; i++) {
 			
-			unsigned int pixel = src[j*h+i];
+			unsigned int pixel = *p++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
 		
 		for(int i=0; i<h; i++) {
@@ -588,16 +622,18 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 
 			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
-			 			
-			buffer[j2*h+i] = 0xFF000000|b<<16|g<<8|r;
-		}		
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
+		}
 	}
+	
+	buf = buffer;
 	
 	for(int j=begin; j<end; j++) {
 		
@@ -608,23 +644,25 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		unsigned int sr = 0;
 		unsigned int sg = 0;
 		unsigned int sb = 0;
-		
+				
 		for(int i=0; i<h; i++) {
 			
-			unsigned int pixel = buffer[j2*h+i];
+			unsigned int pixel = *buf++;
 			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
-			unsigned char r = (pixel)&0xFF;			 
+			unsigned char r = (pixel)&0xFF;
 			
-			sb += b;
-			sg += g;
-			sr += r;
+			sb+=b;
+			sg+=g;
+			sr+=r;
 			
-			*sum++ = sb;
-			*sum++ = sg;
-			*sum++ = sr;			
+			*sum++=sb;
+			*sum++=sg;
+			*sum++=sr;
 		}
+		
+		unsigned int *q = dst+j;
 		
 		for(int i=0; i<h; i++) {
 			
@@ -636,14 +674,15 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 
 			double weight = 1.0/(double)((right-left)+1);
 			
-			int L = left*3;
-			int R = right*3;
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
 			
-			unsigned char b = (rgb[R++]-rgb[L++])*weight;
-			unsigned char g = (rgb[R++]-rgb[L++])*weight;
-			unsigned char r = (rgb[R]-rgb[L])*weight;	
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
 			 			
-			dst[i*w+j] = 0xFF000000|b<<16|g<<8|r;
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
 		}
 	}
 }
@@ -697,7 +736,7 @@ StopWatch::start();
 				if(k==thread-1) {
 					dispatch_group_async(_group,_queue,^{
 						//toYX(yx,xy,w,h,col*k,h);
-						//blurX(yx,xy,buffer[k],w,h,col*k,h);
+						//blurX(yx,xy,w,h,col*k,h);
 						blurX2(yx,xy,buffer[k],w,h,col*k,h);
 						//sumX(yx,xy,rgb[k],w,h,col*k,h);
 						//sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,h);
@@ -706,10 +745,10 @@ StopWatch::start();
 				else {
 					dispatch_group_async(_group,_queue,^{
 						//toYX(yx,xy,w,h,col*k,col*(k+1));
-						//blurX(yx,xy,buffer[k],w,h,col*k,col*(k+1));
+						//blurX(yx,xy,w,h,col*k,col*(k+1));
 						blurX2(yx,xy,buffer[k],w,h,col*k,col*(k+1));
 						//sumX(yx,xy,rgb[k],w,h,col*k,col*(k+1));
-						//sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,col*(k+1));						
+						//sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,col*(k+1));
 					});
 				}
 			}
@@ -725,8 +764,8 @@ StopWatch::start();
 				if(k==thread-1) {
 					dispatch_group_async(_group,_queue,^{
 						//toXY(xy,yx,w,h,row*k,w);
-						//blurY(xy,yx,buffer[k],w,h,row*k,w);
-						blurY2(xy,yx,buffer[k],w,h,row*k,w);						
+						//blurY(xy,yx,w,h,row*k,w);
+						blurY2(xy,yx,buffer[k],w,h,row*k,w);
 						//sumY(xy,yx,rgb[k],w,h,row*k,w);
 						//sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,w);
 					});
@@ -734,18 +773,18 @@ StopWatch::start();
 				else {
 					dispatch_group_async(_group,_queue,^{
 						//toXY(xy,yx,w,h,row*k,row*(k+1));
-						//blurY(xy,yx,buffer[k],w,h,row*k,row*(k+1));
+						//blurY(xy,yx,w,h,row*k,row*(k+1));
 						blurY2(xy,yx,buffer[k],w,h,row*k,row*(k+1));
 						//sumY(xy,yx,rgb[k],w,h,row*k,row*(k+1));
 						//sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,row*(k+1));
 					});
 				}
 				
-			}			
+			}
 			dispatch_group_wait(_group,DISPATCH_TIME_FOREVER);
 		}
 
-StopWatch::stop();	
+StopWatch::stop();
 		
 		stb_image::stbi_write_png("./blur.png",w,h,4,(void const*)xy,w<<2);
 		
@@ -758,6 +797,6 @@ StopWatch::stop();
 		}
 		
 		delete[] yx;
-		delete[] xy;		
+		delete[] xy;
 	}
 }
