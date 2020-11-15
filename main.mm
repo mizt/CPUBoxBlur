@@ -27,7 +27,7 @@ enum Type {
 
 namespace Config {
 	const int thread = Thread::FULL;
-	const int type = Type::SUM2;
+	const int type = Type::BLUR2;
 }
 
 #define RADIUS 32

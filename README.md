@@ -16,7 +16,7 @@ blur
 ![](./images/blur.png)
 
 sum  
-0.02sec (MacBook Air 2019)
+0.018sec (MacBook Air 2019)
 ![](./images/blur.png)
 
 Photoshop 2020 (Box Blur)
