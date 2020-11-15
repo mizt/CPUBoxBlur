@@ -4,6 +4,10 @@
 [laser height_test](https://vimeo.com/93992919)  
 1920×1080 px
 
+### Build
+
+`clang++ -std=c++17 -Wc++17-extensions -fobjc-arc -O3 -framework Cocoa ./main.mm -o ./main`
+
 ### Parameter
 
 Radius is 32 px  

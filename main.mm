@@ -653,7 +653,16 @@ int main(int argc, char *argv[]) {
 		int h;
 		int bpp;
 		
-		unsigned int *xy = (unsigned int *)stb_image::stbi_load("./images/test.png",&w,&h,&bpp,4);
+		NSString *src = [NSString stringWithFormat:@"%@/%s",
+			[[NSBundle mainBundle] bundlePath],
+			"images/test.png"
+		];
+		
+		
+		
+		NSLog(@"%@",src);
+		
+		unsigned int *xy = (unsigned int *)stb_image::stbi_load([src UTF8String],&w,&h,&bpp,4);
 		
 		if(RADIUS==0) return 0;
 		
@@ -752,8 +761,16 @@ StopWatch::start();
 		}
 
 StopWatch::stop();
+
+
+		NSString *dst = [NSString stringWithFormat:@"%@/%s",
+			[[NSBundle mainBundle] bundlePath],
+			"blur.png"
+		];
 		
-		stb_image::stbi_write_png("./blur.png",w,h,4,(void const*)xy,w<<2);
+		NSLog(@"%@",dst);
+		
+		stb_image::stbi_write_png([dst UTF8String],w,h,4,(void const*)xy,w<<2);
 		
 		for(int k=0; k<thread; k++) {
 			delete[] rgb[k];
