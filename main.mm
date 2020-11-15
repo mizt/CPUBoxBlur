@@ -27,7 +27,7 @@ enum Type {
 
 namespace Config {
 	const int thread = Thread::FULL;
-	const int type = Type::BLUR2;
+	const int type = Type::SUM2;
 }
 
 #define RADIUS 32
@@ -75,13 +75,10 @@ void blurX(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 		unsigned int *p = src+i*w;
 		
 		for(int k=-(radius+1); k<radius; k++) {
-			
 			int j2 = 0+k;
 			if(j2<0) j2=0;
 			else if(j2>=w-1) j2=w-1;
-			
-			unsigned int pixel = *(p+j2);
-			
+			unsigned int pixel = *(p+j2);			
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
 			sr+=(pixel)&0xFF;
@@ -130,12 +127,10 @@ void blurY(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 		
 		unsigned int *p = src+j*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {
-		
+		for(int k=-(radius+1); k<radius; k++) {		
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
-			
 			unsigned int pixel = *(p+i2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
@@ -190,13 +185,10 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		unsigned int *p = src+i*w;
 		
 		for(int k=-(radius+1); k<radius; k++) {
-			
 			int j2 = 0+k;
 			if(j2<0) j2=0;
-			else if(j2>=w-1) j2=w-1;
-			
+			else if(j2>=w-1) j2=w-1;			
 			unsigned int pixel = *(p+j2);
-			
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
 			sr+=(pixel)&0xFF;
@@ -233,13 +225,10 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		sr = sg = sb = 0;
 		
 		for(int k=-(radius+1); k<radius; k++) {
-			
 			int j2 = 0+k;
 			if(j2<0) j2=0;
-			else if(j2>=w-1) j2=w-1;
-			
+			else if(j2>=w-1) j2=w-1;			
 			unsigned int pixel = *(p+j2);
-			
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
 			sr+=(pixel)&0xFF;
@@ -292,12 +281,10 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		
 		unsigned int *p = src+j*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {
-		
+		for(int k=-(radius+1); k<radius; k++) {		
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
-			
 			unsigned int pixel = *(p+i2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
@@ -334,12 +321,10 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		
 		unsigned int *p = buffer+(j-begin)*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {
-		
+		for(int k=-(radius+1); k<radius; k++) {		
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
-			
 			unsigned int pixel = *(p+i2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
@@ -390,20 +375,13 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		unsigned int *p = src+i*w;
 		
 		for(int j=0; j<w; j++) {
-			
 			unsigned int pixel = *p++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		unsigned int *q = dst+i;
@@ -447,20 +425,13 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		unsigned int *p = src+j*h;
 		
 		for(int i=0; i<h; i++) {
-			
 			unsigned int pixel = *p++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		unsigned int *q = dst+j;
@@ -506,20 +477,13 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		unsigned int *p = src+i*w;
 		
 		for(int j=0; j<w; j++) {
-			
 			unsigned int pixel = *p++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		for(int j=0; j<w; j++) {
@@ -554,22 +518,13 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		unsigned int sb = 0;
 		
 		for(int j=0; j<w; j++) {
-			
-			int i2 = i-begin;
-			
 			unsigned int pixel = *buf++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		unsigned int *q = dst+i;
@@ -615,20 +570,13 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		unsigned int *p = src+j*h;
 		
 		for(int i=0; i<h; i++) {
-			
 			unsigned int pixel = *p++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		for(int i=0; i<h; i++) {
@@ -655,9 +603,7 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 	buf = buffer;
 	
 	for(int j=begin; j<end; j++) {
-		
-		int j2 = j-begin;
-		
+				
 		unsigned int *sum = rgb;
 		
 		unsigned int sr = 0;
@@ -665,20 +611,13 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		unsigned int sb = 0;
 				
 		for(int i=0; i<h; i++) {
-			
 			unsigned int pixel = *buf++;
-			
 			unsigned char b = (pixel>>16)&0xFF;
 			unsigned char g = (pixel>>8)&0xFF;
 			unsigned char r = (pixel)&0xFF;
-			
-			sb+=b;
-			sg+=g;
-			sr+=r;
-			
-			*sum++=sb;
-			*sum++=sg;
-			*sum++=sr;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
 		}
 		
 		unsigned int *q = dst+j;
