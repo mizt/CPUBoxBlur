@@ -11,6 +11,25 @@ namespace stb_image {
 }
 #pragma clang diagnostic pop
 
+enum Thread {
+	FULL=0,
+	HALF,
+	SINGLE
+};
+
+enum Type {
+	NONE=0,
+	BLUR,
+	BLUR2,
+	SUM,
+	SUM2
+};
+
+namespace Config {
+	const int thread = Thread::FULL;
+	const int type = Type::BLUR2;
+}
+
 #define RADIUS 32
 
 namespace StopWatch {
@@ -711,9 +730,15 @@ int main(int argc, char *argv[]) {
 		NSLog(@"%d,%d",w,h);
 		NSLog(@"%lu,%lu",processorCount,activeProcessorCount);
 		
-		int thread = activeProcessorCount; // >>1;
+		int thread = 1; // >>1;
+		if(Config::thread==Thread::FULL) {
+			thread = activeProcessorCount;
+		}
+		else if(Config::thread==Thread::HALF) {
+			thread = activeProcessorCount>>1;
+		}
 		
-		NSLog(@"%d",thread);
+		NSLog(@"thread = %d",thread);
 		
 		unsigned int **rgb = new unsigned int *[thread];
 
@@ -737,20 +762,21 @@ StopWatch::start();
 				
 				if(k==thread-1) {
 					dispatch_group_async(_group,_queue,^{
-						//toYX(yx,xy,w,h,col*k,h);
-						//blurX(yx,xy,w,h,col*k,h);
-						blurX2(yx,xy,buffer[k],w,h,col*k,h);
-						//sumX(yx,xy,rgb[k],w,h,col*k,h);
-						//sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,h);
+						if(Config::type==Type::BLUR) blurX(yx,xy,w,h,col*k,h);
+						else if(Config::type==Type::BLUR2) blurX2(yx,xy,buffer[k],w,h,col*k,h);
+						else if(Config::type==Type::SUM) sumX(yx,xy,rgb[k],w,h,col*k,h);
+						else if(Config::type==Type::SUM2) sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,h);
+						else toYX(yx,xy,w,h,col*k,h);
 					});
 				}
 				else {
 					dispatch_group_async(_group,_queue,^{
-						//toYX(yx,xy,w,h,col*k,col*(k+1));
-						//blurX(yx,xy,w,h,col*k,col*(k+1));
-						blurX2(yx,xy,buffer[k],w,h,col*k,col*(k+1));
-						//sumX(yx,xy,rgb[k],w,h,col*k,col*(k+1));
-						//sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,col*(k+1));
+						
+						if(Config::type==Type::BLUR) blurX(yx,xy,w,h,col*k,col*(k+1));
+						else if(Config::type==Type::BLUR2) blurX2(yx,xy,buffer[k],w,h,col*k,col*(k+1));
+						else if(Config::type==Type::SUM) sumX(yx,xy,rgb[k],w,h,col*k,col*(k+1));
+						else if(Config::type==Type::SUM2) sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,col*(k+1));
+						else toYX(yx,xy,w,h,col*k,h);
 					});
 				}
 			}
@@ -765,20 +791,20 @@ StopWatch::start();
 				
 				if(k==thread-1) {
 					dispatch_group_async(_group,_queue,^{
-						//toXY(xy,yx,w,h,row*k,w);
-						//blurY(xy,yx,w,h,row*k,w);
-						blurY2(xy,yx,buffer[k],w,h,row*k,w);
-						//sumY(xy,yx,rgb[k],w,h,row*k,w);
-						//sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,w);
+						if(Config::type==Type::BLUR) blurY(xy,yx,w,h,row*k,w);
+						else if(Config::type==Type::BLUR2) blurY2(xy,yx,buffer[k],w,h,row*k,w);
+						else if(Config::type==Type::SUM) sumY(xy,yx,rgb[k],w,h,row*k,w);
+						else if(Config::type==Type::SUM2) sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,w);
+						else toXY(xy,yx,w,h,row*k,w);						
 					});
 				}
 				else {
 					dispatch_group_async(_group,_queue,^{
-						//toXY(xy,yx,w,h,row*k,row*(k+1));
-						//blurY(xy,yx,w,h,row*k,row*(k+1));
-						blurY2(xy,yx,buffer[k],w,h,row*k,row*(k+1));
-						//sumY(xy,yx,rgb[k],w,h,row*k,row*(k+1));
-						//sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,row*(k+1));
+						if(Config::type==Type::BLUR) blurY(xy,yx,w,h,row*k,row*(k+1));
+						else if(Config::type==Type::BLUR2) blurY2(xy,yx,buffer[k],w,h,row*k,row*(k+1));
+						else if(Config::type==Type::SUM) sumY(xy,yx,rgb[k],w,h,row*k,row*(k+1));
+						else if(Config::type==Type::SUM2) sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,row*(k+1));
+						else toXY(xy,yx,w,h,row*k,row*(k+1));
 					});
 				}
 				
