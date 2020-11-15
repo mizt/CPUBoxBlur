@@ -357,8 +357,8 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 
 void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int begin, int end) {
 	
-	int rudius = RADIUS;
-	if(rudius<=1) rudius = 1;
+	int radius = RADIUS;
+	if(radius<=1) radius = 1;
 
 	for(int i=begin; i<end; i++) {
 
@@ -391,10 +391,10 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		
 		for(int j=0; j<w; j++) {
 		
-			int left = j-rudius;
+			int left = j-radius;
 			if(left<0) left = 0;
 			
-			int right = j+rudius;
+			int right = j+radius;
 			if(right>=w) right = w-1;
 
 			double weight = 1.0/(double)((right-left)+1);
@@ -414,8 +414,8 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 
 void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int begin, int end) {
 	
-	int rudius = RADIUS;
-	if(rudius<=1) rudius = 1;
+	int radius = RADIUS;
+	if(radius<=1) radius = 1;
 	
 	for(int j=begin; j<end; j++) {
 		
@@ -448,10 +448,10 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-rudius;
+			int left = i-radius;
 			if(left<0) left = 0;
 			
-			int right = i+rudius;
+			int right = i+radius;
 			if(right>=h) right = h-1;
 
 			double weight = 1.0/(double)((right-left)+1);
@@ -471,8 +471,8 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 
 void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int *rgb,int w,int h,int begin, int end) {
 	
-	int rudius = RADIUS;
-	if(rudius<=1) rudius = 1;
+	int radius = RADIUS;
+	if(radius<=1) radius = 1;
 
 	unsigned int *buf = buffer;
 	
@@ -505,10 +505,10 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int j=0; j<w; j++) {
 		
-			int left = j-rudius;
+			int left = j-radius;
 			if(left<0) left = 0;
 			
-			int right = j+rudius;
+			int right = j+radius;
 			if(right>=w) right = w-1;
 
 			double weight = 1.0/(double)((right-left)+1);
@@ -557,10 +557,10 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 
 		for(int j=0; j<w; j++) {
 		
-			int left = j-rudius;
+			int left = j-radius;
 			if(left<0) left = 0;
 			
-			int right = j+rudius;
+			int right = j+radius;
 			if(right>=w) right = w-1;
 
 			double weight = 1.0/(double)((right-left)+1);
@@ -580,8 +580,8 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 
 void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int *rgb,int w,int h,int begin, int end) {
 	
-	int rudius = RADIUS;
-	if(rudius<=1) rudius = 1;
+	int radius = RADIUS;
+	if(radius<=1) radius = 1;
 	
 	unsigned int *buf = buffer;
 	
@@ -614,10 +614,10 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-rudius;
+			int left = i-radius;
 			if(left<0) left = 0;
 			
-			int right = i+rudius;
+			int right = i+radius;
 			if(right>=h) right = h-1;
 
 			double weight = 1.0/(double)((right-left)+1);
@@ -666,10 +666,10 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-rudius;
+			int left = i-radius;
 			if(left<0) left = 0;
 			
-			int right = i+rudius;
+			int right = i+radius;
 			if(right>=h) right = h-1;
 
 			double weight = 1.0/(double)((right-left)+1);
