@@ -711,7 +711,9 @@ int main(int argc, char *argv[]) {
 		NSLog(@"%d,%d",w,h);
 		NSLog(@"%lu,%lu",processorCount,activeProcessorCount);
 		
-		int thread = activeProcessorCount;
+		int thread = activeProcessorCount; // >>1;
+		
+		NSLog(@"%d",thread);
 		
 		unsigned int **rgb = new unsigned int *[thread];
 
@@ -719,10 +721,10 @@ int main(int argc, char *argv[]) {
 			rgb[k] = new unsigned int[(w>h)?w*3:h*3];
 		}
 		
-		unsigned int **buffer = new unsigned int *[activeProcessorCount];
+		unsigned int **buffer = new unsigned int *[thread];
 		
-		for(int k=0; k<activeProcessorCount; k++) {
-			buffer[k] = new unsigned int[(int)(ceil((w*h)/(double)activeProcessorCount))];
+		for(int k=0; k<thread; k++) {
+			buffer[k] = new unsigned int[(int)(ceil((w*h)/(double)thread))];
 		}
 		
 		if(xy) {
@@ -792,7 +794,7 @@ StopWatch::stop();
 			delete[] rgb[k];
 		}
 		
-		for(int k=0; k<activeProcessorCount; k++) {
+		for(int k=0; k<thread; k++) {
 			delete[] buffer[k];
 		}
 		
