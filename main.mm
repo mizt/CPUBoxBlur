@@ -23,7 +23,9 @@ enum Type {
 	BLUR,
 	BLUR2,
 	SUM,
-	SUM2
+	SUM2,
+	VARIABLE,
+	VARIABLE2
 };
 
 namespace Config {
@@ -392,16 +394,10 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 			int left = j;
 			int right = j;
 			
-			if(radius==0) {
-				if(left==0) right+=1;
-				else left-=1;
-			}
-			else {
-				left-=(radius+1);
-				if(left<0) left = 0;
-				right+=radius;
-				if(right>=w) right = w-1;
-			}
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=w) right = w-1;
 			
 			double weight = 1.0/(double)(right-left);
 				
@@ -450,17 +446,11 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 			int left = i;
 			int right = i;
 			
-			if(radius==0) {
-				if(left==0) right+=1;
-				else left-=1;
-			}
-			else {
-				left-=(radius+1);
-				if(left<0) left = 0;
-				right+=radius;
-				if(right>=h) right = h-1;
-			}
-				
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=h) right = h-1;
+			
 			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
@@ -508,16 +498,10 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			int left = j;
 			int right = j;
 			
-			if(radius==0) {
-				if(left==0) right+=1;
-				else left-=1;
-			}
-			else {
-				left-=(radius+1);
-				if(left<0) left = 0;
-				right+=radius;
-				if(right>=w) right = w-1;
-			}
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=w) right = w-1;
 
 			double weight = 1.0/(double)(right-left);
 			
@@ -559,16 +543,10 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			int left = j;
 			int right = j;
 			
-			if(radius==0) {
-				if(left==0) right+=1;
-				else left-=1;
-			}
-			else {
-				left-=(radius+1);
-				if(left<0) left = 0;
-				right+=radius;
-				if(right>=w) right = w-1;
-			}
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=w) right = w-1;
 
 			double weight = 1.0/(double)(right-left);
 			
@@ -617,6 +595,334 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 			int left = i;
 			int right = i;
 			
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=h) right = h-1;
+			
+			double weight = 1.0/(double)(right-left);
+			
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+			
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
+		}
+	}
+	
+	buf = buffer;
+	
+	for(int j=begin; j<end; j++) {
+				
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+				
+		for(int i=0; i<h; i++) {
+			unsigned int pixel = *buf++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned int *q = dst+j;
+		
+		for(int i=0; i<h; i++) {
+			
+			int left = i;
+			int right = i;
+			
+			left-=(radius+1);
+			if(left<0) left = 0;
+			right+=radius;
+			if(right>=h) right = h-1;
+			
+			double weight = 1.0/(double)(right-left);
+			
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+			
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			 			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
+		}
+	}
+}
+
+void variableX(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned int *rgb,int w,int h,int begin, int end) {
+	
+	for(int i=begin; i<end; i++) {
+
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+		
+		unsigned int *p = src+i*w;
+		
+		for(int j=0; j<w; j++) {
+			unsigned int pixel = *p++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned int *q = dst+i;
+		unsigned char *m = map+i*w;
+		
+		for(int j=0; j<w; j++) {
+			
+			int radius = *m++;
+		
+			int left = j;
+			int right = j;
+			
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
+			
+			double weight = 1.0/(double)(right-left);
+				
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+				
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
+		}
+	}
+}
+
+void variableY(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned int *rgb,int w,int h,int begin, int end) {
+	
+	for(int j=begin; j<end; j++) {
+		
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+		
+		unsigned int *p = src+j*h;
+		
+		for(int i=0; i<h; i++) {
+			unsigned int pixel = *p++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned int *q = dst+j;
+		unsigned char *m = map+j;
+		
+		for(int i=0; i<h; i++) {
+			
+			int left = i;
+			int right = i;
+			
+			int radius = *m++;
+			
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=h) right = h-1;
+			}
+				
+			double weight = 1.0/(double)(right-left);
+			
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+			
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			 			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=w;
+		}
+	}
+}
+
+void variableX2(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned int *buffer,unsigned int *rgb,int w,int h,int begin, int end) {
+	
+	unsigned int *buf = buffer;
+	
+	for(int i=begin; i<end; i++) {
+		
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+		
+		unsigned int *p = src+i*w;
+		
+		
+		for(int j=0; j<w; j++) {
+			unsigned int pixel = *p++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned char *m = map+i*w;
+		
+		for(int j=0; j<w; j++) {
+		
+			int left = j;
+			int right = j;
+			
+			int radius = *m++;
+			
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
+
+			double weight = 1.0/(double)(right-left);
+			
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+			
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*buf++ = 0xFF000000|b<<16|g<<8|r;
+		}
+	}
+	
+	buf = buffer;
+	
+	for(int i=begin; i<end; i++) {
+
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+		
+		for(int j=0; j<w; j++) {
+			unsigned int pixel = *buf++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned int *q = dst+i;
+		unsigned char *m = map+i*w;
+		
+		for(int j=0; j<w; j++) {
+		
+			int left = j;
+			int right = j;
+			
+			int radius = *m++;
+			
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
+
+			double weight = 1.0/(double)(right-left);
+			
+			unsigned int *L = rgb+left*3;
+			unsigned int *R = rgb+right*3;
+			
+			unsigned char b = ((*R++)-(*L++))*weight;
+			unsigned char g = ((*R++)-(*L++))*weight;
+			unsigned char r = ((*R)-(*L))*weight;
+			
+			*q = 0xFF000000|b<<16|g<<8|r;
+			q+=h;
+		}
+	}
+}
+
+void variableY2(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned int *buffer,unsigned int *rgb,int w,int h,int begin, int end) {
+
+	unsigned int *buf = buffer;
+	
+	for(int j=begin; j<end; j++) {
+				
+		unsigned int *sum = rgb;
+		
+		unsigned int sr = 0;
+		unsigned int sg = 0;
+		unsigned int sb = 0;
+		
+		unsigned int *p = src+j*h;
+		
+		for(int i=0; i<h; i++) {
+			unsigned int pixel = *p++;
+			unsigned char b = (pixel>>16)&0xFF;
+			unsigned char g = (pixel>>8)&0xFF;
+			unsigned char r = (pixel)&0xFF;
+			*sum++=(sb+=b);
+			*sum++=(sg+=g);
+			*sum++=(sr+=r);
+		}
+		
+		unsigned char *m = map+j;
+		
+		for(int i=0; i<h; i++) {
+			
+			int left = i;
+			int right = i;
+			
+			int radius = *m++;
+			
 			if(radius==0) {
 				if(left==0) right+=1;
 				else left-=1;
@@ -662,11 +968,14 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		}
 		
 		unsigned int *q = dst+j;
+		unsigned char *m = map+j;
 		
 		for(int i=0; i<h; i++) {
 			
 			int left = i;
 			int right = i;
+			
+			int radius = *m++;
 			
 			if(radius==0) {
 				if(left==0) right+=1;
@@ -678,7 +987,6 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 				right+=radius;
 				if(right>=h) right = h-1;
 			}
-				
 
 			double weight = 1.0/(double)(right-left);
 			
@@ -695,6 +1003,7 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 	}
 }
 
+
 int main(int argc, char *argv[]) {
 
 	@autoreleasepool {
@@ -708,8 +1017,6 @@ int main(int argc, char *argv[]) {
 			"images/test.png"
 		];
 		
-		
-		
 		NSLog(@"%@",src);
 		
 		unsigned int *xy = (unsigned int *)stb_image::stbi_load([src UTF8String],&w,&h,&bpp,4);
@@ -717,6 +1024,13 @@ int main(int argc, char *argv[]) {
 		if(RADIUS==0) return 0;
 		
 		unsigned int *yx = new unsigned int[w*h];
+		
+		unsigned char *map = new unsigned char[w*h];
+		for(int i=0; i<h; i++) {
+			for(int j=0; j<w; j++) {
+				map[i*w+j] = 32;
+			}
+		}
 		
 		dispatch_group_t _group = dispatch_group_create();
 		dispatch_queue_t _queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH,0);
@@ -764,6 +1078,8 @@ StopWatch::start();
 						else if(Config::type==Type::BLUR2) blurX2(yx,xy,buffer[k],w,h,col*k,h);
 						else if(Config::type==Type::SUM) sumX(yx,xy,rgb[k],w,h,col*k,h);
 						else if(Config::type==Type::SUM2) sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,h);
+						else if(Config::type==Type::VARIABLE) variableX(yx,xy,map,rgb[k],w,h,col*k,h);
+						else if(Config::type==Type::VARIABLE2) variableX2(yx,xy,map,buffer[k],rgb[k],w,h,col*k,h);
 						else toYX(yx,xy,w,h,col*k,h);
 					});
 				}
@@ -773,6 +1089,8 @@ StopWatch::start();
 						else if(Config::type==Type::BLUR2) blurX2(yx,xy,buffer[k],w,h,col*k,col*(k+1));
 						else if(Config::type==Type::SUM) sumX(yx,xy,rgb[k],w,h,col*k,col*(k+1));
 						else if(Config::type==Type::SUM2) sumX2(yx,xy,buffer[k],rgb[k],w,h,col*k,col*(k+1));
+						else if(Config::type==Type::VARIABLE) variableX(yx,xy,map,rgb[k],w,h,col*k,col*(k+1));
+						else if(Config::type==Type::VARIABLE2) variableX2(yx,xy,map,buffer[k],rgb[k],w,h,col*k,col*(k+1));
 						else toYX(yx,xy,w,h,col*k,h);
 					});
 				}
@@ -792,6 +1110,8 @@ StopWatch::start();
 						else if(Config::type==Type::BLUR2) blurY2(xy,yx,buffer[k],w,h,row*k,w);
 						else if(Config::type==Type::SUM) sumY(xy,yx,rgb[k],w,h,row*k,w);
 						else if(Config::type==Type::SUM2) sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,w);
+						else if(Config::type==Type::VARIABLE) variableY(xy,yx,map,rgb[k],w,h,row*k,w);
+						else if(Config::type==Type::VARIABLE2) variableY2(xy,yx,map,buffer[k],rgb[k],w,h,row*k,w);
 						else toXY(xy,yx,w,h,row*k,w);
 					});
 				}
@@ -801,6 +1121,8 @@ StopWatch::start();
 						else if(Config::type==Type::BLUR2) blurY2(xy,yx,buffer[k],w,h,row*k,row*(k+1));
 						else if(Config::type==Type::SUM) sumY(xy,yx,rgb[k],w,h,row*k,row*(k+1));
 						else if(Config::type==Type::SUM2) sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,row*(k+1));
+						else if(Config::type==Type::VARIABLE) variableY(xy,yx,map,rgb[k],w,h,row*k,row*(k+1));
+						else if(Config::type==Type::VARIABLE2) variableY2(xy,yx,map,buffer[k],rgb[k],w,h,row*k,row*(k+1));
 						else toXY(xy,yx,w,h,row*k,row*(k+1));
 					});
 				}
@@ -830,5 +1152,7 @@ StopWatch::stop();
 		
 		delete[] yx;
 		delete[] xy;
+		
+		delete[] map;
 	}
 }
