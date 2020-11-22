@@ -1,4 +1,5 @@
 #import <Foundation/Foundation.h>
+#import <Foundation/Foundation.h>
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wcomma"
 #pragma clang diagnostic ignored "-Wunused-function"
@@ -78,7 +79,7 @@ void blurX(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 			int j2 = 0+k;
 			if(j2<0) j2=0;
 			else if(j2>=w-1) j2=w-1;
-			unsigned int pixel = *(p+j2);			
+			unsigned int pixel = *(p+j2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
 			sr+=(pixel)&0xFF;
@@ -127,7 +128,7 @@ void blurY(unsigned int *dst,unsigned int *src,int w,int h,int begin,int end) {
 		
 		unsigned int *p = src+j*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {		
+		for(int k=-(radius+1); k<radius; k++) {
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
@@ -187,7 +188,7 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		for(int k=-(radius+1); k<radius; k++) {
 			int j2 = 0+k;
 			if(j2<0) j2=0;
-			else if(j2>=w-1) j2=w-1;			
+			else if(j2>=w-1) j2=w-1;
 			unsigned int pixel = *(p+j2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
@@ -227,7 +228,7 @@ void blurX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		for(int k=-(radius+1); k<radius; k++) {
 			int j2 = 0+k;
 			if(j2<0) j2=0;
-			else if(j2>=w-1) j2=w-1;			
+			else if(j2>=w-1) j2=w-1;
 			unsigned int pixel = *(p+j2);
 			sb+=(pixel>>16)&0xFF;
 			sg+=(pixel>>8)&0xFF;
@@ -281,7 +282,7 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		
 		unsigned int *p = src+j*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {		
+		for(int k=-(radius+1); k<radius; k++) {
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
@@ -321,7 +322,7 @@ void blurY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,int w,int h
 		
 		unsigned int *p = buffer+(j-begin)*h;
 		
-		for(int k=-(radius+1); k<radius; k++) {		
+		for(int k=-(radius+1); k<radius; k++) {
 			int i2 = 0+k;
 			if(i2<0) i2 = 0;
 			else if(i2>=h-1) i2=h-1;
@@ -388,17 +389,25 @@ void sumX(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		
 		for(int j=0; j<w; j++) {
 		
-			int left = j-radius;
-			if(left<0) left = 0;
+			int left = j;
+			int right = j;
 			
-			int right = j+radius;
-			if(right>=w) right = w-1;
-
-			double weight = 1.0/(double)((right-left)+1);
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
 			
+			double weight = 1.0/(double)(right-left);
+				
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
-			
+				
 			unsigned char b = ((*R++)-(*L++))*weight;
 			unsigned char g = ((*R++)-(*L++))*weight;
 			unsigned char r = ((*R)-(*L))*weight;
@@ -438,13 +447,21 @@ void sumY(unsigned int *dst,unsigned int *src,unsigned int *rgb,int w,int h,int 
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-radius;
-			if(left<0) left = 0;
+			int left = i;
+			int right = i;
 			
-			int right = i+radius;
-			if(right>=h) right = h-1;
-
-			double weight = 1.0/(double)((right-left)+1);
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=h) right = h-1;
+			}
+				
+			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
@@ -488,13 +505,21 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int j=0; j<w; j++) {
 		
-			int left = j-radius;
-			if(left<0) left = 0;
+			int left = j;
+			int right = j;
 			
-			int right = j+radius;
-			if(right>=w) right = w-1;
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
 
-			double weight = 1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
@@ -531,13 +556,21 @@ void sumX2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 
 		for(int j=0; j<w; j++) {
 		
-			int left = j-radius;
-			if(left<0) left = 0;
+			int left = j;
+			int right = j;
 			
-			int right = j+radius;
-			if(right>=w) right = w-1;
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=w) right = w-1;
+			}
 
-			double weight = 1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
@@ -581,13 +614,21 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-radius;
-			if(left<0) left = 0;
+			int left = i;
+			int right = i;
 			
-			int right = i+radius;
-			if(right>=h) right = h-1;
-
-			double weight = 1.0/(double)((right-left)+1);
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=h) right = h-1;
+			}
+				
+			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
@@ -624,13 +665,22 @@ void sumY2(unsigned int *dst,unsigned int *src,unsigned int *buffer,unsigned int
 		
 		for(int i=0; i<h; i++) {
 			
-			int left = i-radius;
-			if(left<0) left = 0;
+			int left = i;
+			int right = i;
 			
-			int right = i+radius;
-			if(right>=h) right = h-1;
+			if(radius==0) {
+				if(left==0) right+=1;
+				else left-=1;
+			}
+			else {
+				left-=(radius+1);
+				if(left<0) left = 0;
+				right+=radius;
+				if(right>=h) right = h-1;
+			}
+				
 
-			double weight = 1.0/(double)((right-left)+1);
+			double weight = 1.0/(double)(right-left);
 			
 			unsigned int *L = rgb+left*3;
 			unsigned int *R = rgb+right*3;
@@ -719,7 +769,6 @@ StopWatch::start();
 				}
 				else {
 					dispatch_group_async(_group,_queue,^{
-						
 						if(Config::type==Type::BLUR) blurX(yx,xy,w,h,col*k,col*(k+1));
 						else if(Config::type==Type::BLUR2) blurX2(yx,xy,buffer[k],w,h,col*k,col*(k+1));
 						else if(Config::type==Type::SUM) sumX(yx,xy,rgb[k],w,h,col*k,col*(k+1));
@@ -743,7 +792,7 @@ StopWatch::start();
 						else if(Config::type==Type::BLUR2) blurY2(xy,yx,buffer[k],w,h,row*k,w);
 						else if(Config::type==Type::SUM) sumY(xy,yx,rgb[k],w,h,row*k,w);
 						else if(Config::type==Type::SUM2) sumY2(xy,yx,buffer[k],rgb[k],w,h,row*k,w);
-						else toXY(xy,yx,w,h,row*k,w);						
+						else toXY(xy,yx,w,h,row*k,w);
 					});
 				}
 				else {
@@ -761,7 +810,6 @@ StopWatch::start();
 		}
 
 StopWatch::stop();
-
 
 		NSString *dst = [NSString stringWithFormat:@"%@/%s",
 			[[NSBundle mainBundle] bundlePath],
