@@ -748,7 +748,8 @@ void variableY(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned i
 			int left = i;
 			int right = i;
 			
-			int radius = *m++;
+			int radius = *m;
+            m+=w;
 			
 			if(radius==0) {
 				if(left==0) right+=1;
@@ -921,7 +922,8 @@ void variableY2(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned 
 			int left = i;
 			int right = i;
 			
-			int radius = *m++;
+			int radius = *m;
+            m+=w;
 			
 			if(radius==0) {
 				if(left==0) right+=1;
@@ -975,7 +977,8 @@ void variableY2(unsigned int *dst,unsigned int *src,unsigned char *map,unsigned 
 			int left = i;
 			int right = i;
 			
-			int radius = *m++;
+			int radius = *m;
+            m+=w;
 			
 			if(radius==0) {
 				if(left==0) right+=1;
